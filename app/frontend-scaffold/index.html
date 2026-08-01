@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- WHY: viewport-fit=cover forces rendering under notches/cutouts. user-scalable=no strictly prevents pinch-zoom on touch gestures. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Blitz RPG PWA</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- WHY: PlayCanvas renders the 3D world on the bottom WebGL layer -->
+        <canvas id="playcanvas-canvas"></canvas>
+        
+        <!-- WHY: PixiJS renders the high-performance 2D HUD/particles transparently on top (avoiding HTML DOM reflows) -->
+        <canvas id="pixi-canvas"></canvas>
+        
+        <!-- WHY: CSS3 HUD handles UI elements that require crisp edges and exact PointerEvent binding (D-pad, action buttons) -->
+        <div id="css-hud">
+            <div id="joystick-zone"></div>
+            <div id="action-buttons">
+                <div class="action-btn" id="btn-juke">Juke</div>
+                <div class="action-btn" id="btn-truck">Truck</div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

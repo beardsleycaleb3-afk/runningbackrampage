@@ -1,0 +1,8 @@
+{
+  "name": "Remix Gridiron Career",
+  "description": "An immersive American football halfback 3D runner RPG with team customization, career quarters, and tactical upgrades.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

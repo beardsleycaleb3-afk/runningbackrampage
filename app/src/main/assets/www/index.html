@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gridiron Career</title>
+    <link rel="manifest" href="./manifest.json">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body, html { width: 100%; height: 100%; background: #1C1B1F; color: #E6E1E5; overflow: hidden; }
+        #app { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 24px; background: #1C1B1F; opacity: 0; transition: opacity 0.3s ease; }
+        .screen.active { display: flex; opacity: 1; z-index: 10; }
+
+        /* Buttons & Inputs */
+        button { cursor: pointer; border: none; outline: none; font-weight: bold; border-radius: 12px; padding: 14px 24px; font-size: 16px; transition: transform 0.1s; }
+        button:active { transform: scale(0.96); }
+        .btn-primary { background: #FFD700; color: #1C1B1F; width: 100%; max-width: 320px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(255,215,0,0.3); }
+        .btn-secondary { background: #49454F; color: #E6E1E5; width: 100%; max-width: 320px; margin-bottom: 12px; }
+        .btn-outline { background: transparent; border: 2px solid #79747E; color: #E6E1E5; width: 100%; max-width: 320px; margin-bottom: 12px; }
+
+        input, select { width: 100%; max-width: 320px; padding: 12px 16px; border-radius: 12px; border: 1px solid #79747E; background: #2B2930; color: #E6E1E5; font-size: 16px; margin-bottom: 16px; outline: none; }
+
+        /* Card & UI components */
+        .card { background: #2B2930; border-radius: 20px; padding: 20px; width: 100%; max-width: 320px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); text-align: center; }
+        .flex-row { display: flex; width: 100%; max-width: 320px; gap: 12px; margin-bottom: 12px; }
+
+        /* Canvas */
+        #gameCanvas { width: 100%; height: 100%; display: block; background: #1B5E20; }
+        .controls-overlay { position: absolute; bottom: 24px; width: 100%; display: flex; justify-content: space-around; padding: 0 24px; pointer-events: none; z-index: 20; }
+        .control-btn { width: 72px; height: 72px; border-radius: 50%; background: rgba(27, 94, 32, 0.9); border: 3px solid #FFF; color: #FFF; font-size: 28px; display: flex; align-items: center; justify-content: center; pointer-events: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+
+        /* Modal */
+        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; padding: 24px; }
+        .modal.visible { display: flex; }
+        .modal-content { background: #2B2930; border-radius: 24px; padding: 28px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
+        .modal-content h2 { margin-bottom: 12px; font-size: 22px; color: #FFD700; }
+        .modal-content p { margin-bottom: 20px; color: #CAC4D0; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- SCREEN 1: MAIN MENU -->
+        <div id="screen-menu" class="screen active">
+            <div id="menu-card" class="card" style="background: #1B5E20;">
+                <div id="menu-logo" style="width: 64px; height: 64px; border-radius: 50%; background: #FFD700; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 3px solid #FFF;">🛡️</div>
+                <h2 id="menu-team-name" style="font-size: 20px; font-weight: bold; color: #FFF; margin-bottom: 4px;">Gridiron Blitz</h2>
+                <p id="menu-quarter-coins" style="font-size: 14px; color: #FFD700; font-weight: 600;">Quarter 1 | 🪙 200</p>
+            </div>
+            <h1 style="font-size: 26px; font-weight: 900; letter-spacing: 1px; margin-bottom: 8px; text-align: center;">GRIDIRON CAREER</h1>
+            <p style="font-size: 14px; color: #CAC4D0; margin-bottom: 24px; text-align: center;">3D Halfback Runner & RPG</p>
+
+            <button class="btn-primary" onclick="startRun()">START DRIVE / RUN</button>
+            <button class="btn-secondary" onclick="navigateTo('playbook')" style="background: #00796B; color: #FFF;">📖 Playbook</button>
+            <button class="btn-secondary" onclick="navigateTo('team')">Team Management & Colors</button>
+            <div class="flex-row">
+                <button class="btn-outline" style="flex:1;" onclick="navigateTo('shop')">⚡ Upgrades</button>
+                <button class="btn-outline" style="flex:1;" onclick="navigateTo('stats')">🏆 Stats</button>
+            </div>
+            <div class="flex-row">
+                <button class="btn-secondary" style="flex:1; background: #D4AF37; color: #000;" onclick="navigateTo('museum')">🏛️ Hall of Fame</button>
+                <button class="btn-secondary" style="flex:1; background: #1565C0; color: #FFF;" onclick="navigateTo('leaderboard')">🌍 Leaderboard</button>
+            </div>
+            <button class="btn-secondary" style="background: #555; color: #FFF;" onclick="navigateTo('settings')">⚙️ Settings</button>
+        </div>
+
+        <!-- SCREEN 2: TEAM MANAGEMENT -->
+        <div id="screen-team" class="screen">
+            <h2 style="font-size: 22px; font-weight: bold; margin-bottom: 16px;">Team Customization</h2>
+            <div class="card">
+                <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Enter Team Name</p>
+                <input type="text" id="input-team-name" value="Gridiron Blitz" />
+                <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Primary Uniform Color</p>
+                <select id="select-primary">
+                    <option value="#1B5E20">Gridiron Green</option>
+                    <option value="#0D47A1">Midnight Navy</option>
+                    <option value="#B71C1C">Crimson Red</option>
+                    <option value="#F57F17">Gold Rush</option>
+                    <option value="#4A148C">Royal Purple</option>
+                </select>
+                <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Secondary Accent Color</p>
+                <select id="select-secondary">
+                    <option value="#FFD700">Gold</option>
+                    <option value="#FFFFFF">White</option>
+                    <option value="#00E5FF">Cyan</option>
+                    <option value="#FF4081">Pink</option>
+                </select>
+                <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Team Logo Crest</p>
+                <select id="select-logo">
+                    <option value="🛡️">🛡️ Shield</option>
+                    <option value="⚡">⚡ Lightning</option>
+                    <option value="⭐">⭐ Star</option>
+                    <option value="💀">💀 Skull</option>
+                    <option value="🐻">🐻 Bear</option>
+                    <option value="🦅">🦅 Eagle</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="saveTeamCustomization()">Save Team Configuration</button>
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- SCREEN 3: GAMEPLAY -->
+        <div id="screen-game" class="screen" style="padding: 0;">
+            <div id="announcer-text" style="position: absolute; top: 80px; width: 100%; text-align: center; color: #FFF; font-size: 22px; font-weight: bold; font-style: italic; text-shadow: 2px 2px 4px #000; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 30;"></div>
+            <canvas id="gameCanvas" width="360" height="640"></canvas>
+            <div class="controls-overlay">
+                <button class="control-btn" onclick="moveLane('left')">←</button>
+                <button class="control-btn" style="background: #D84315;" onmousedown="startSprint()" onmouseup="stopSprint()" onmouseleave="stopSprint()" ontouchstart="startSprint()" ontouchend="stopSprint()">🏃</button>
+                <button class="control-btn" onclick="moveLane('right')">→</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: SHOP -->
+        <div id="screen-shop" class="screen">
+            <h2 style="font-size: 22px; font-weight: bold; margin-bottom: 8px;">Upgrades Shop</h2>
+            <p id="shop-coins" style="font-size: 16px; color: #FFD700; font-weight: bold; margin-bottom: 20px;">🪙 200</p>
+            
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 14px 20px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: bold;">⚡ Speed Boost</h3>
+                    <p style="font-size: 12px; color: #CAC4D0;" id="lv-speed">Lv. 1</p>
+                </div>
+                <button style="width: auto; padding: 8px 16px; background: #FFD700; color: #1C1B1F;" onclick="buyUpgrade('speed')">50 🪙</button>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 14px 20px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: bold;">🛡️ Stiff Arm</h3>
+                    <p style="font-size: 12px; color: #CAC4D0;" id="lv-stiff">Lv. 1</p>
+                </div>
+                <button style="width: auto; padding: 8px 16px; background: #FFD700; color: #1C1B1F;" onclick="buyUpgrade('stiffArm')">50 🪙</button>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 14px 20px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: bold;">🎯 Agility</h3>
+                    <p style="font-size: 12px; color: #CAC4D0;" id="lv-agility">Lv. 1</p>
+                </div>
+                <button style="width: auto; padding: 8px 16px; background: #FFD700; color: #1C1B1F;" onclick="buyUpgrade('agility')">50 🪙</button>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 14px 20px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: bold;">🔋 Stamina</h3>
+                    <p style="font-size: 12px; color: #CAC4D0;" id="lv-stamina">Lv. 1</p>
+                </div>
+                <button style="width: auto; padding: 8px 16px; background: #FFD700; color: #1C1B1F;" onclick="buyUpgrade('stamina')">50 🪙</button>
+            </div>
+
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- SCREEN 5: STATS -->
+        <div id="screen-stats" class="screen">
+            <h2 style="font-size: 22px; font-weight: bold; margin-bottom: 20px;">Career Statistics</h2>
+            <div class="card" style="text-align: left;">
+                <p style="margin-bottom: 10px;"><strong>Team:</strong> <span id="stat-team">Gridiron Blitz</span></p>
+                <p style="margin-bottom: 10px;"><strong>Level:</strong> <span id="stat-level">1</span> <span style="font-size: 13px; color: #CAC4D0;" id="stat-xp">(0 / 200 XP)</span></p>
+                <p style="margin-bottom: 10px;"><strong>Badges:</strong> <span id="stat-badges">None</span></p>
+                <p style="margin-bottom: 10px;"><strong>Current Quarter:</strong> <span id="stat-quarter">Q 1</span></p>
+                <p style="margin-bottom: 10px;"><strong>Career Score:</strong> <span id="stat-score">0 pts</span></p>
+                <p style="margin-bottom: 10px;"><strong>Total Touchdowns:</strong> <span id="stat-td">0 TDs</span></p>
+                <p style="margin-bottom: 10px;"><strong>Total Rushing Yards:</strong> <span id="stat-yards">0 yds</span></p>
+                <p style="margin-bottom: 0;"><strong>Banked Coins:</strong> <span id="stat-coins">🪙 200</span></p>
+            </div>
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- SCREEN: MUSEUM -->
+        <div id="screen-museum" class="screen">
+            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 8px; color: #FFD700;">Hall of Fame Museum</h2>
+            <div id="museum-canvas-container" style="width: 100%; max-width: 320px; height: 200px; background: #000; border-radius: 12px; margin-bottom: 20px; position: relative;">
+                <canvas id="museumCanvas" width="320" height="200" style="width: 100%; height: 100%;"></canvas>
+            </div>
+            <div class="card" style="text-align: left; background: #333;">
+                <h3 id="museum-chapter" style="color: #FFD700; margin-bottom: 10px;">Chapter 1</h3>
+                <p style="margin-bottom: 8px;"><strong>Legacy Points:</strong> <span id="museum-lp">0</span> LP</p>
+                <p style="margin-bottom: 8px;"><strong>Active Archetype:</strong> <span id="museum-archetype">None</span></p>
+                <p style="margin-bottom: 8px;"><strong>Reputation:</strong> <span id="museum-rep">50</span>%</p>
+                <p style="margin-bottom: 0;"><strong>Clutch Factor:</strong> <span id="museum-clutch">0</span></p>
+            </div>
+            <button class="btn-primary" onclick="navigateTo('menu')">Exit Museum</button>
+        </div>
+
+        <!-- SCREEN: PLAYBOOK -->
+        <div id="screen-playbook" class="screen">
+            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #FFF;">Playbook</h2>
+            <p style="font-size: 14px; color: #CAC4D0; margin-bottom: 20px; text-align: center;">Select your offensive scheme for the next drive.</p>
+            
+            <div class="card" style="text-align: left; background: #333; cursor: pointer; border: 2px solid transparent;" id="play-card-POWER_RUN" onclick="selectPlay('POWER_RUN')">
+                <h3 style="color: #FFD700; margin-bottom: 4px;">Power Run</h3>
+                <p style="font-size: 13px; color: #CAC4D0;">+Stamina, +Trucking, -Speed</p>
+            </div>
+            <div class="card" style="text-align: left; background: #333; cursor: pointer; border: 2px solid transparent;" id="play-card-SPEED_SWEEP" onclick="selectPlay('SPEED_SWEEP')">
+                <h3 style="color: #FFD700; margin-bottom: 4px;">Speed Sweep</h3>
+                <p style="font-size: 13px; color: #CAC4D0;">+Speed, +Agility, -Trucking</p>
+            </div>
+            <div class="card" style="text-align: left; background: #333; cursor: pointer; border: 2px solid #FFD700;" id="play-card-BALANCED_DIVE" onclick="selectPlay('BALANCED_DIVE')">
+                <h3 style="color: #FFD700; margin-bottom: 4px;">Balanced Dive</h3>
+                <p style="font-size: 13px; color: #CAC4D0;">No stat modifiers, pure execution.</p>
+            </div>
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- LEVEL UP MODAL -->
+        <div id="levelup-modal" class="modal">
+            <div class="modal-content" style="background: #1B5E20; border: 2px solid #FFD700;">
+                <h2 style="font-size: 28px; color: #FFF; text-shadow: 2px 2px #000;">LEVEL UP!</h2>
+                <h3 style="font-size: 20px; color: #FFD700; margin-bottom: 12px;">Level <span id="levelup-number">2</span></h3>
+                <p style="color: #FFF; margin-bottom: 8px;">Badge Unlocked!</p>
+                <div style="font-size: 32px; background: #333; display: inline-block; padding: 12px; border-radius: 50%; border: 2px solid #FFD700; margin-bottom: 20px;">🏅</div>
+                <p id="levelup-badge-name" style="color: #FFD700; font-weight: bold; margin-bottom: 20px;">Rookie Runner</p>
+                <button class="btn-primary" onclick="closeLevelUpModal()">Awesome!</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: SUMMARY -->
+        <div id="screen-summary" class="screen">
+            <h2 id="summary-title" style="font-size: 28px; font-weight: bold; margin-bottom: 8px; color: #FFD700;">🏈 TOUCHDOWN!</h2>
+            <p id="summary-subtitle" style="font-size: 14px; color: #CAC4D0; margin-bottom: 24px;">Incredible drive!</p>
+            
+            <div class="card" style="text-align: left; background: #333; margin-bottom: 24px;">
+                <p style="margin-bottom: 10px; font-size: 16px;"><strong>Opponent:</strong> <span id="summary-opponent" style="float: right; color: #FFF;">Unknown</span></p>
+                <p style="margin-bottom: 10px; font-size: 16px;"><strong>Yards Gained:</strong> <span id="summary-yards" style="float: right; color: #FFF;">100 yds</span></p>
+                <p style="margin-bottom: 10px; font-size: 16px;"><strong>Objectives Cleared:</strong> <span id="summary-objectives" style="float: right; color: #4CAF50;">Yes</span></p>
+                <p style="margin-bottom: 10px; font-size: 16px;"><strong>XP Earned:</strong> <span id="summary-xp" style="float: right; color: #00E5FF;">+150 XP</span></p>
+                <p style="margin-bottom: 0; font-size: 16px;"><strong>Coins Earned:</strong> <span id="summary-coins" style="float: right; color: #FFD700;">+50 🪙</span></p>
+            </div>
+            
+            <p id="summary-unlocks" style="color: #FFD700; font-size: 14px; font-weight: bold; margin-bottom: 20px; white-space: pre-line; text-align: center;"></p>
+
+            <button class="btn-primary" onclick="navigateTo('menu')">Continue Career</button>
+        </div>
+
+        <!-- SCREEN: SETTINGS -->
+        <div id="screen-settings" class="screen">
+            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #FFF;">Settings</h2>
+            <div class="card" style="text-align: left; background: #333;">
+                <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div>
+                        <p style="font-weight: bold; margin-bottom: 4px;">Haptic Feedback</p>
+                        <p style="font-size: 12px; color: #CAC4D0;">Vibrate on jukes and collisions</p>
+                    </div>
+                    <button id="toggle-haptics-btn" class="btn-primary" style="padding: 8px 16px; min-width: auto; margin-bottom: 0;" onclick="toggleHaptics()">ON</button>
+                </div>
+            </div>
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- SCREEN: LEADERBOARD -->
+        <div id="screen-leaderboard" class="screen">
+            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #FFF;">🌍 Global Leaderboard</h2>
+            <p style="font-size: 14px; color: #CAC4D0; margin-bottom: 16px;">Top Rushing Yards (Career)</p>
+            <div class="card" style="padding: 12px; margin-bottom: 16px; max-height: 400px; overflow-y: auto;" id="leaderboard-container">
+                <p>Loading...</p>
+            </div>
+            <button class="btn-outline" onclick="navigateTo('menu')">Back to Menu</button>
+        </div>
+
+        <!-- MODAL: CONTRACT RENEWAL -->
+        <div id="modal-contract" class="screen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center;">
+            <div class="card" style="margin: 20px;">
+                <h2 style="color: #FFD700; margin-bottom: 16px;">📝 Season Ended!</h2>
+                <p style="margin-bottom: 16px; color: #FFF;">Your contract is up for renewal. The front office is offering a standard extension.</p>
+                <div style="background: #222; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
+                    <p style="color: #CAC4D0; font-size: 14px; margin-bottom: 8px;"><strong>Offer:</strong> 3 Years / <span id="contract-offer-amt"></span> Coins</p>
+                    <p style="color: #CAC4D0; font-size: 14px; margin-bottom: 8px;"><strong>Current Morale:</strong> <span id="contract-morale"></span>%</p>
+                    <p style="color: #999; font-size: 12px;">Holding out for more money grants a larger bonus but reduces locker room morale.</p>
+                </div>
+                <button class="btn-primary" onclick="acceptContract()" style="margin-bottom: 12px;">Accept Offer</button>
+                <button class="btn-outline" onclick="holdOutContract()" style="color: #FF4081; border-color: #FF4081;">Hold Out (+50% Coins, -20% Morale)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        window.addEventListener('error', function(e) {
+            const err = document.createElement('div');
+            err.style.position = 'absolute';
+            err.style.top = '0';
+            err.style.left = '0';
+            err.style.width = '100%';
+            err.style.background = 'red';
+            err.style.color = 'white';
+            err.style.zIndex = '9999';
+            err.style.padding = '10px';
+            err.innerText = 'Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno;
+            document.body.appendChild(err);
+        });
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW registration failed', err));
+        }
+    </script>
+
+    <!-- ES Module Entry Point -->
+    <script type="module" src="./js/modules/es.js"></script>
+</body>
+</html>
