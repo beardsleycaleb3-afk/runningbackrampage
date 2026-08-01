@@ -85,6 +85,12 @@
                     <option value="#00E5FF">Cyan</option>
                     <option value="#FF4081">Pink</option>
                 </select>
+                <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Jersey Style</p>
+                <select id="select-jersey">
+                    <option value="solid">Solid</option>
+                    <option value="striped">Striped</option>
+                    <option value="mesh">Mesh</option>
+                </select>
                 <p style="font-size: 13px; color: #CAC4D0; margin-bottom: 8px;">Team Logo Crest</p>
                 <select id="select-logo">
                     <option value="🛡️">🛡️ Shield</option>
@@ -220,6 +226,7 @@
             <p id="summary-subtitle" style="font-size: 14px; color: #CAC4D0; margin-bottom: 24px;">Incredible drive!</p>
             
             <div class="card" style="text-align: left; background: #333; margin-bottom: 24px;">
+                <p style="margin-bottom: 10px; font-size: 16px;"><strong>Media Narrative:</strong> <span id="summary-narrative" style="float: right; color: #E040FB; font-weight: bold;">---</span></p>
                 <p style="margin-bottom: 10px; font-size: 16px;"><strong>Opponent:</strong> <span id="summary-opponent" style="float: right; color: #FFF;">Unknown</span></p>
                 <p style="margin-bottom: 10px; font-size: 16px;"><strong>Yards Gained:</strong> <span id="summary-yards" style="float: right; color: #FFF;">100 yds</span></p>
                 <p style="margin-bottom: 10px; font-size: 16px;"><strong>Objectives Cleared:</strong> <span id="summary-objectives" style="float: right; color: #4CAF50;">Yes</span></p>
@@ -269,6 +276,71 @@
                 </div>
                 <button class="btn-primary" onclick="acceptContract()" style="margin-bottom: 12px;">Accept Offer</button>
                 <button class="btn-outline" onclick="holdOutContract()" style="color: #FF4081; border-color: #FF4081;">Hold Out (+50% Coins, -20% Morale)</button>
+            </div>
+        </div>
+
+        <!-- MODAL: PREGAME RITUAL -->
+        <div id="modal-ritual" class="screen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.92); flex-direction: column; justify-content: center; overflow-y: auto; padding: 20px;">
+            <div class="card" style="margin: 10px; max-width: 400px; width: 100%;">
+                <h2 style="color: #FFD700; font-size: 24px; margin-bottom: 8px;">🎧 Pregame Ritual</h2>
+                <p style="margin-bottom: 16px; color: #CAC4D0; font-size: 13px;">Choose your pregame preparation for a minor stat buff on this drive!</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                    <button class="btn-secondary" style="background: #222; border: 1px solid #444; color: #FFF; text-align: left; padding: 12px; display: flex; justify-content: space-between; align-items: center;" onclick="selectRitual('music')">
+                        <div>
+                            <p style="font-weight: bold; margin-bottom: 4px;">🎵 Listen to Music</p>
+                            <p style="font-size: 12px; color: #00E5FF;">+1 Speed Boost</p>
+                        </div>
+                        <span style="color: #FFD700;">Select →</span>
+                    </button>
+                    <button class="btn-secondary" style="background: #222; border: 1px solid #444; color: #FFF; text-align: left; padding: 12px; display: flex; justify-content: space-between; align-items: center;" onclick="selectRitual('stretch')">
+                        <div>
+                            <p style="font-weight: bold; margin-bottom: 4px;">🧘 Stretch</p>
+                            <p style="font-size: 12px; color: #4CAF50;">+1 Agility & +1 Stamina</p>
+                        </div>
+                        <span style="color: #FFD700;">Select →</span>
+                    </button>
+                    <button class="btn-secondary" style="background: #222; border: 1px solid #444; color: #FFF; text-align: left; padding: 12px; display: flex; justify-content: space-between; align-items: center;" onclick="selectRitual('film')">
+                        <div>
+                            <p style="font-weight: bold; margin-bottom: 4px;">📼 Watch Film</p>
+                            <p style="font-size: 12px; color: #E040FB;">+1 Stiff Arm (Trucking)</p>
+                        </div>
+                        <span style="color: #FFD700;">Select →</span>
+                    </button>
+                </div>
+
+                <!-- SCOUTING REPORT BUTTON -->
+                <button class="btn-primary" style="background: #311B92; border: 1px solid #B388FF; color: #FFF; margin-bottom: 12px;" onclick="generateScoutingReport()">
+                    🤖 Scouting Report (AI Analysis)
+                </button>
+
+                <!-- AI SCOUTING REPORT DISPLAY BOX -->
+                <div id="scouting-report-box" style="display: none; background: #1B1B3A; border: 1px solid #B388FF; border-radius: 8px; padding: 12px; text-align: left; margin-bottom: 16px;">
+                    <h4 style="color: #B388FF; font-size: 14px; margin-bottom: 6px;">📋 AI Defensive Scouting</h4>
+                    <p id="scout-defense-style" style="color: #FFD700; font-size: 13px; font-weight: bold; margin-bottom: 6px;"></p>
+                    <p id="scout-analysis-text" style="color: #CAC4D0; font-size: 12px; margin-bottom: 10px;"></p>
+                    <div style="background: #000; padding: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div>
+                            <p style="font-size: 11px; color: #999;">Suggested Play:</p>
+                            <p id="scout-suggested-play" style="color: #00E5FF; font-weight: bold; font-size: 13px;"></p>
+                        </div>
+                        <button id="btn-adopt-play" class="btn-primary" style="padding: 6px 12px; font-size: 11px; margin-bottom: 0;" onclick="adoptScoutedPlay()">Adopt Play</button>
+                    </div>
+                    <div style="background: rgba(255, 215, 0, 0.1); border-left: 3px solid #FFD700; padding: 8px; border-radius: 4px;">
+                        <p style="font-size: 11px; color: #FFD700; font-weight: bold; margin-bottom: 2px;">💡 PRO-TIP RITUAL PAIRING</p>
+                        <p id="scout-pro-tip" style="color: #E0E0E0; font-size: 12px; margin: 0;"></p>
+                    </div>
+                </div>
+
+                <!-- RECENT RITUALS ROUTINE TRACKER -->
+                <div style="background: #1F1F2E; border: 1px solid #3E3E5E; border-radius: 8px; padding: 10px; margin-bottom: 14px; text-align: left;">
+                    <h4 style="color: #FFD700; font-size: 13px; margin-bottom: 6px;">📊 Recent Rituals & Performance Tracker</h4>
+                    <div id="recent-rituals-list" style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <button class="btn-outline" style="margin-bottom: 0;" onclick="skipRitual()">Skip & Start Drive</button>
             </div>
         </div>
 

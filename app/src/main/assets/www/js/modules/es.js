@@ -160,6 +160,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function updateTeamUI() {
         document.getElementById('input-team-name').value = manager.state.teamName;
+        if (document.getElementById('select-primary')) document.getElementById('select-primary').value = manager.state.primaryColor || '#1B5E20';
+        if (document.getElementById('select-secondary')) document.getElementById('select-secondary').value = manager.state.secondaryColor || '#FFD700';
+        if (document.getElementById('select-jersey')) document.getElementById('select-jersey').value = manager.state.jerseyStyle || 'solid';
+        if (document.getElementById('select-logo')) document.getElementById('select-logo').value = manager.state.logoSymbol || '🛡️';
     }
 
     // Upgrades bindings
@@ -173,8 +177,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('input-team-name').value || "Gridiron Blitz";
         const primary = document.getElementById('select-primary').value;
         const secondary = document.getElementById('select-secondary').value;
+        const jersey = document.getElementById('select-jersey') ? document.getElementById('select-jersey').value : 'solid';
         const logo = document.getElementById('select-logo').value;
-        manager.updateTeam({ teamName: name, primaryColor: primary, secondaryColor: secondary, logoSymbol: logo });
+        manager.updateTeam({ teamName: name, primaryColor: primary, secondaryColor: secondary, jerseyStyle: jersey, logoSymbol: logo });
         audio.playCoin();
         window.navigateTo('menu');
     };
@@ -231,7 +236,125 @@ window.addEventListener('DOMContentLoaded', () => {
     let effectiveStamina = 1;
     let effectiveTrucking = 1;
 
+    let lastScoutedPlay = null;
+
     window.startRun = () => {
+        audio.playSwipe();
+        const opponents = ["Stallions", "Vipers", "Ironclads", "Sentinels", "Grizzlies", "Outlaws"];
+        manager.state.currentOpponent = opponents[Math.floor(Math.random() * opponents.length)];
+        if (!manager.state.rivalries) manager.state.rivalries = {};
+        if (!manager.state.rivalries[manager.state.currentOpponent]) {
+            manager.state.rivalries[manager.state.currentOpponent] = { gamesPlayed: 0, closeGames: 0, highScoringGames: 0, isRival: false };
+        }
+
+        const recentEl = document.getElementById('recent-rituals-list');
+        if (recentEl) {
+            if (!manager.state.recentRituals || manager.state.recentRituals.length === 0) {
+                recentEl.innerHTML = '<p style="color:#CAC4D0; font-size:12px; margin:0;">No recent rituals yet. Pick one above!</p>';
+            } else {
+                recentEl.innerHTML = manager.state.recentRituals.map(r => `
+                    <div style="background:#2D2D44; padding:6px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border-left:3px solid #FFD700;">
+                        <div>
+                            <p style="font-weight:bold; font-size:12px; color:#FFF; margin:0;">${r.ritual}</p>
+                            <p style="font-size:11px; color:#00E5FF; margin:0;">${r.buff}</p>
+                        </div>
+                        <span style="font-size:11px; font-weight:bold; color:#4CAF50; background:#1A3320; padding:3px 6px; border-radius:4px;">${r.multiplier}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        const scoutBox = document.getElementById('scouting-report-box');
+        if (scoutBox) scoutBox.style.display = 'none';
+
+        const ritualModal = document.getElementById('modal-ritual');
+        if (ritualModal) ritualModal.style.display = 'flex';
+    };
+
+    window.selectRitual = (type) => {
+        manager.state.activeRitual = type;
+        audio.playCoin();
+        window.launchDrive();
+    };
+
+    window.skipRitual = () => {
+        manager.state.activeRitual = 'skip';
+        audio.playSwipe();
+        window.launchDrive();
+    };
+
+    window.generateScoutingReport = () => {
+        audio.playCoin();
+        const opponent = manager.state.currentOpponent || "Stallions";
+        const rivalData = manager.state.rivalries ? manager.state.rivalries[opponent] : null;
+        const isRival = rivalData && rivalData.isRival;
+
+        const defenseProfiles = [
+            {
+                style: "8-Man Heavy Box (Aggressive Run Blitz)",
+                text: `${opponent} linebackers are crowding the line of scrimmage to stuff inside runs. Perimeter sweeps will catch them overpursuing outside.`,
+                play: "SPEED_SWEEP",
+                playName: "⚡ Speed Sweep",
+                proTip: "Against Heavy Blitzes, Stretching provides the best juke speed and stamina to escape pursuit."
+            },
+            {
+                style: "Cover-2 Contain (Fast Edge Rushers)",
+                text: `${opponent} edge rushers are setting wide containment to prevent outside sweeps. Direct power running up the middle will exploit their light interior box.`,
+                play: "POWER_RUN",
+                playName: "💥 Power Run",
+                proTip: "Against Fast Edge Rushers, Watching Film provides crucial Stiff Arm trucking to overpower interior tackles."
+            },
+            {
+                style: "3-4 Flex Defense (Gap Pursuit)",
+                text: `${opponent} defensive tackles are slanting into gaps aggressively. A balanced run scheme with quick jukes will counter their aggressive penetration.`,
+                play: "BALANCED_DIVE",
+                playName: "⚖️ Balanced Dive",
+                proTip: "Against Gap Pursuit, Listening to Music boosts Speed so you can hit running lanes before gaps close."
+            },
+            {
+                style: "Tampa-2 Pursuit Wall (Fast Linebackers)",
+                text: `${opponent} uses speedy pursuit linebackers. Using downhill trucking power will wear them out and break through second-level tackles.`,
+                play: "POWER_RUN",
+                playName: "💥 Power Run",
+                proTip: "Against Speedy Linebackers, Watching Film gives extra Trucking power to break second-level tackles."
+            }
+        ];
+
+        let profile = defenseProfiles[Math.floor(Math.random() * defenseProfiles.length)];
+        if (isRival) {
+            profile.text = `⚔️ RIVAL ALERT: ${profile.text} Expect higher intensity and tighter tackling!`;
+        }
+
+        lastScoutedPlay = profile.play;
+        const scoutBox = document.getElementById('scouting-report-box');
+        document.getElementById('scout-defense-style').innerText = profile.style;
+        document.getElementById('scout-analysis-text').innerText = profile.text;
+        document.getElementById('scout-suggested-play').innerText = profile.playName;
+        const proTipEl = document.getElementById('scout-pro-tip');
+        if (proTipEl) proTipEl.innerText = profile.proTip;
+        const adoptBtn = document.getElementById('btn-adopt-play');
+        if (adoptBtn) {
+            adoptBtn.innerText = "Adopt Play";
+            adoptBtn.style.background = "#311B92";
+        }
+        if (scoutBox) scoutBox.style.display = 'block';
+    };
+
+    window.adoptScoutedPlay = () => {
+        if (!lastScoutedPlay) return;
+        manager.state.activePlaybook = lastScoutedPlay;
+        manager.save();
+        audio.playCoin();
+        const btn = document.getElementById('btn-adopt-play');
+        if (btn) {
+            btn.innerText = "✓ Adopted (" + lastScoutedPlay.replace('_', ' ') + ")";
+            btn.style.background = "#2E7D32";
+        }
+    };
+
+    window.launchDrive = () => {
+        const ritualModal = document.getElementById('modal-ritual');
+        if (ritualModal) ritualModal.style.display = 'none';
         audio.playSwipe();
         window.navigateTo('game');
         mechanics.reset();
@@ -252,6 +375,15 @@ window.addEventListener('DOMContentLoaded', () => {
             effectiveTrucking = Math.max(1, effectiveTrucking - 1);
         }
 
+        if (s.activeRitual === 'music') {
+            effectiveSpeed += 1;
+        } else if (s.activeRitual === 'stretch') {
+            effectiveAgility += 1;
+            effectiveStamina += 1;
+        } else if (s.activeRitual === 'film') {
+            effectiveTrucking += 1;
+        }
+
         localYards = 0;
         localScore = manager.state.score;
         gameActive = true;
@@ -262,13 +394,6 @@ window.addEventListener('DOMContentLoaded', () => {
         fatigue = 0;
         isSprinting = false;
         activeObjective = Math.random() > 0.5 ? { type: 'NO_JUKE', target: 20, reward: 50, completed: false, text: "Rush 20 yards without juking" } : null;
-
-        const opponents = ["Stallions", "Vipers", "Ironclads", "Sentinels", "Grizzlies", "Outlaws"];
-        manager.state.currentOpponent = opponents[Math.floor(Math.random() * opponents.length)];
-        if (!manager.state.rivalries) manager.state.rivalries = {};
-        if (!manager.state.rivalries[manager.state.currentOpponent]) {
-            manager.state.rivalries[manager.state.currentOpponent] = { gamesPlayed: 0, closeGames: 0, highScoringGames: 0, isRival: false };
-        }
     };
 
     // Swipe & Touch Controls
@@ -461,10 +586,37 @@ window.addEventListener('DOMContentLoaded', () => {
         ctx.arc(pCenter + 5, (height * 0.82) + shadowOffset, 35, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = team.secondaryColor || '#FFD700';
+        ctx.save();
+        ctx.fillStyle = team.primaryColor || '#1B5E20';
         ctx.beginPath();
         ctx.arc(pCenter, py, pRadius, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.clip();
+        if (team.jerseyStyle === 'striped') {
+            ctx.fillStyle = team.secondaryColor || '#FFD700';
+            for (let x = pCenter - pRadius; x <= pCenter + pRadius; x += 14) {
+                ctx.fillRect(x, py - pRadius, 7, pRadius * 2);
+            }
+        } else if (team.jerseyStyle === 'mesh') {
+            ctx.fillStyle = team.secondaryColor || '#FFD700';
+            for (let x = pCenter - pRadius; x <= pCenter + pRadius; x += 10) {
+                for (let y = py - pRadius; y <= py + pRadius; y += 10) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        } else {
+            ctx.fillStyle = team.secondaryColor || '#FFD700';
+            ctx.beginPath();
+            ctx.arc(pCenter, py, pRadius * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(pCenter, py, pRadius, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 3;
         ctx.stroke();
@@ -547,12 +699,82 @@ window.addEventListener('DOMContentLoaded', () => {
         
         const unlocked = legacy.evaluateArchetypes();
         manager.state.careerGamesPlayed++;
+
+        if (manager.state.activeRitual && manager.state.activeRitual !== 'skip') {
+            let multVal = (1.0 + Math.min(0.55, yards / 180)).toFixed(2) + "x Performance";
+            let ritualName = "🎵 Listen to Music";
+            let buffText = "+1 Speed Boost";
+            if (manager.state.activeRitual === "stretch") {
+                ritualName = "🧘 Stretch";
+                buffText = "+1 Agility/Stamina";
+            } else if (manager.state.activeRitual === "film") {
+                ritualName = "📼 Watch Film";
+                buffText = "+1 Stiff Arm";
+            }
+            if (!manager.state.recentRituals) manager.state.recentRituals = [];
+            manager.state.recentRituals.unshift({
+                ritual: ritualName,
+                buff: buffText,
+                multiplier: multVal
+            });
+            if (manager.state.recentRituals.length > 3) {
+                manager.state.recentRituals = manager.state.recentRituals.slice(0, 3);
+            }
+            manager.state.activeRitual = null;
+        }
+
+        let narrativeTag = "";
+        let narrativeColor = "#E040FB";
+        if (isTD) {
+            if (objectiveCleared && yardsSinceLastJuke >= 20) {
+                narrativeTag = "Clutch Superstar";
+                narrativeColor = "#FFD700";
+            } else if (fatigue > maxFatigue * 0.75) {
+                narrativeTag = "Ironman Endurance";
+                narrativeColor = "#00E5FF";
+            } else if (coinsEarned >= 30) {
+                narrativeTag = "Highlight Reel Phenom";
+                narrativeColor = "#E040FB";
+            } else if (manager.state.clutchFactor >= 3) {
+                narrativeTag = "Clutch Performer";
+                narrativeColor = "#FFD700";
+            } else {
+                narrativeTag = "Breakaway Speedster";
+                narrativeColor = "#00E5FF";
+            }
+        } else {
+            if (yards < 15) {
+                narrativeTag = "Fumble Prone";
+                narrativeColor = "#FF4081";
+            } else if (yards >= 80) {
+                narrativeTag = "Heroic Stand";
+                narrativeColor = "#FFD700";
+            } else if (yards >= 50) {
+                narrativeTag = "Workhorse Grind";
+                narrativeColor = "#00E5FF";
+            } else {
+                narrativeTag = "Ground and Pound";
+                narrativeColor = "#CAC4D0";
+            }
+        }
+
+        if (!manager.state.media_narrative_tags) manager.state.media_narrative_tags = [];
+        if (!manager.state.media_narrative_tags.includes(narrativeTag)) {
+            manager.state.media_narrative_tags.push(narrativeTag);
+        }
+        manager.state.latest_media_narrative_tag = narrativeTag;
         manager.save();
 
         document.getElementById('summary-title').innerText = isTD ? "🏈 TOUCHDOWN!" : "💥 TACKLED!";
         document.getElementById('summary-title').style.color = isTD ? "#FFD700" : "#FF4081";
         document.getElementById('summary-subtitle').innerText = isTD ? "Incredible drive! You rushed 100 yards for a Touchdown!" : `You were tackled by the defense at ${yards} yards.`;
         
+        const narrativeEl = document.getElementById('summary-narrative');
+        if (narrativeEl) {
+            narrativeEl.innerText = `${narrativeTag}`;
+            narrativeEl.style.color = narrativeColor;
+        }
+
         let oppText = opponent || 'Unknown';
         if (rivalData && rivalData.isRival) oppText += ' ⚔️ (RIVAL)';
         document.getElementById('summary-opponent').innerText = oppText;

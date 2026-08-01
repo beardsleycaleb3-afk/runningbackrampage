@@ -5,6 +5,7 @@ export class GameManager {
             teamName: "Gridiron Blitz",
             primaryColor: "#1B5E20",
             secondaryColor: "#FFD700",
+            jerseyStyle: "solid",
             logoSymbol: "🛡️",
             currentQuarter: 1,
             score: 0,
@@ -28,7 +29,14 @@ export class GameManager {
             unlockedBadges: [],
             hapticEnabled: true,
             careerGamesPlayed: 0,
-            lockerRoomMorale: 100
+            lockerRoomMorale: 100,
+            media_narrative_tags: [],
+            latest_media_narrative_tag: null,
+            recentRituals: [
+                { ritual: "🎵 Listen to Music", buff: "+1 Speed", multiplier: "1.24x Performance" },
+                { ritual: "🧘 Stretch", buff: "+1 Agility/Stamina", multiplier: "1.10x Performance" }
+            ],
+            activeRitual: null
         };
         this.load();
     }
@@ -46,6 +54,18 @@ export class GameManager {
                 }
                 if (this.state.lockerRoomMorale === undefined) {
                     this.state.lockerRoomMorale = 100;
+                }
+                if (!this.state.media_narrative_tags) {
+                    this.state.media_narrative_tags = [];
+                }
+                if (!this.state.jerseyStyle) {
+                    this.state.jerseyStyle = "solid";
+                }
+                if (!this.state.recentRituals) {
+                    this.state.recentRituals = [
+                        { ritual: "🎵 Listen to Music", buff: "+1 Speed", multiplier: "1.24x Performance" },
+                        { ritual: "🧘 Stretch", buff: "+1 Agility/Stamina", multiplier: "1.10x Performance" }
+                    ];
                 }
             }
         } catch (e) {
@@ -90,7 +110,7 @@ export class GameManager {
         return false;
     }
 
-    recordDrive(yards, touchdown, isRival) {
+    recordDrive(yards, touchdown, isRival, narrativeTag) {
         this.state.yardsGained += yards;
         this.state.totalRushingYards += yards;
         if (touchdown) {
@@ -102,6 +122,14 @@ export class GameManager {
             this.state.score += 3;
         }
         
+        if (narrativeTag) {
+            if (!this.state.media_narrative_tags) this.state.media_narrative_tags = [];
+            if (!this.state.media_narrative_tags.includes(narrativeTag)) {
+                this.state.media_narrative_tags.push(narrativeTag);
+            }
+            this.state.latest_media_narrative_tag = narrativeTag;
+        }
+
         let xpGained = touchdown ? 150 : Math.floor(yards);
         let bonusXp = 0;
         if (isRival && touchdown) {
